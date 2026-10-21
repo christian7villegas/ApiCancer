@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico MP Neurona - Cáncer de Mama</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --benigno-bg: #ecfdf5;
+            --benigno-border: #10b981;
+            --benigno-text: #065f46;
+            --maligno-bg: #fef2f2;
+            --maligno-border: #ef4444;
+            --maligno-text: #991b1b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .header p { margin: 6px 0 0; font-size: 13.5px; opacity: 0.9; }
+
+        .content { padding: 30px; }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn-chip {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-chip:hover { background: #e2e8f0; color: var(--text-main); }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .sub-label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; }
+
+        input {
+            padding: 11px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+        }
+        input:focus { border-color: var(--primary); background: white; }
+
+        .actions { margin-top: 25px; display: flex; gap: 12px; }
+        .btn-submit {
+            flex: 1;
+            padding: 13px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-submit:hover { background-color: var(--primary-hover); }
+
+        .btn-clear {
+            padding: 13px 20px;
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #resultPanel {
+            margin-top: 30px;
+            display: none;
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+        }
+
+        .diagnosis-banner {
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 6px solid;
+            margin-bottom: 20px;
+        }
+        .diagnosis-banner.benigno {
+            background-color: var(--benigno-bg);
+            border-left-color: var(--benigno-border);
+            color: var(--benigno-text);
+        }
+        .diagnosis-banner.maligno {
+            background-color: var(--maligno-bg);
+            border-left-color: var(--maligno-border);
+            color: var(--maligno-text);
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .metric-card .val { font-size: 18px; font-weight: 700; color: var(--primary); }
+        .metric-card .lbl { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+        .details-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .details-table th, .details-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .details-table th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; }
+
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 600; }
+        .badge-1 { background: #dcfce7; color: #166534; }
+        .badge-0 { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Diagnóstico Neurona McCulloch-Pitts</h1>
+        <p>Configuración cargada desde <code>modelo_mp_neurona.json</code></p>
+    </div>
+
+    <div class="content">
+        <div class="quick-actions">
+            <button type="button" class="btn-chip" onclick="cargarEjemplo('maligno')">⚡ Cargar Maligno</button>
+            <button type="button" class="btn-chip" onclick="cargarEjemplo('benigno')">⚡ Cargar Benigno</button>
+        </div>
+
+        <form id="predictForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Radio Medio</label>
+                    <span class="sub-label">Corte JSON: &le; 17.5455 &rarr; 1</span>
+                    <input type="number" step="any" id="mean_radius" placeholder="Ej. 17.99" required>
+                </div>
+                <div class="form-group">
+                    <label>Textura Media</label>
+                    <span class="sub-label">Corte JSON: &le; 24.495 &rarr; 1</span>
+                    <input type="number" step="any" id="mean_texture" placeholder="Ej. 10.38" required>
+                </div>
+                <div class="form-group">
+                    <label>Perímetro Medio</label>
+                    <span class="sub-label">Corte JSON: &le; 116.145 &rarr; 1</span>
+                    <input type="number" step="any" id="mean_perimeter" placeholder="Ej. 122.8" required>
+                </div>
+                <div class="form-group">
+                    <label>Área Media</label>
+                    <span class="sub-label">Corte JSON: &le; 1322.25 &rarr; 1</span>
+                    <input type="number" step="any" id="mean_area" placeholder="Ej. 1001.0" required>
+                </div>
+                <div class="form-group">
+                    <label>Suavidad Media</label>
+                    <span class="sub-label">Corte JSON: &le; 0.108 &rarr; 1</span>
+                    <input type="number" step="any" id="mean_smoothness" placeholder="Ej. 0.118" required>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-submit">Generar Predicción</button>
+                <button type="button" class="btn-clear" onclick="limpiarFormulario()">Limpiar Celdas</button>
+            </div>
+        </form>
+
+        <div id="resultPanel">
+            <div id="banner" class="diagnosis-banner">
+                <h3 id="diagTitle" style="margin: 0 0 6px 0;"></h3>
+                <p id="diagDesc" style="margin: 0; line-height: 1.5;"></p>
+            </div>
+
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="val" id="metricZ">0 / 5</div>
+                    <div class="lbl">Suma de Activación (Z)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="val" id="metricTh">0</div>
+                    <div class="lbl">Threshold Óptimo</div>
+                </div>
+                <div class="metric-card">
+                    <div class="val" id="metricAcc">0%</div>
+                    <div class="lbl">Nivel de Predicción (Accuracy)</div>
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 10px 0;">Binarización con cortes (Midpoints) del JSON:</h4>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Característica</th>
+                        <th>Valor Ingresado</th>
+                        <th>Punto Medio (Midpoint)</th>
+                        <th>Bit Binario</th>
+                        <th>Evaluación</th>
+                    </tr>
+                </thead>
+                <tbody id="detailsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cargarEjemplo(tipo) {
+        if (tipo === 'maligno') {
+            document.getElementById('mean_radius').value = 17.99;
+            document.getElementById('mean_texture').value = 10.38;
+            document.getElementById('mean_perimeter').value = 122.80;
+            document.getElementById('mean_area').value = 1001.0;
+            document.getElementById('mean_smoothness').value = 0.1184;
+        } else {
+            document.getElementById('mean_radius').value = 11.42;
+            document.getElementById('mean_texture').value = 14.50;
+            document.getElementById('mean_perimeter').value = 73.20;
+            document.getElementById('mean_area').value = 402.0;
+            document.getElementById('mean_smoothness').value = 0.0850;
+        }
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('predictForm').reset();
+        document.getElementById('resultPanel').style.display = 'none';
+    }
+
+    document.getElementById('predictForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const data = {
+            mean_radius: document.getElementById('mean_radius').value,
+            mean_texture: document.getElementById('mean_texture').value,
+            mean_perimeter: document.getElementById('mean_perimeter').value,
+            mean_area: document.getElementById('mean_area').value,
+            mean_smoothness: document.getElementById('mean_smoothness').value
+        };
+
+        try {
+            const response = await fetch('http://localhost:5000/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const panel = document.getElementById('resultPanel');
+                const banner = document.getElementById('banner');
+                
+                panel.style.display = 'block';
+                banner.className = `diagnosis-banner ${result.diagnostico.toLowerCase()}`;
+                
+                document.getElementById('diagTitle').textContent = `Resultado: ${result.diagnostico.toUpperCase()}`;
+                document.getElementById('diagDesc').textContent = result.explicacion;
+                
+                document.getElementById('metricZ').textContent = `${result.suma_z} / ${result.total_features}`;
+                document.getElementById('metricTh').textContent = result.threshold_optimo;
+                document.getElementById('metricAcc').textContent = `${result.nivel_prediccion_exactitud}%`;
+
+                const tbody = document.getElementById('detailsBody');
+                tbody.innerHTML = '';
+
+                result.detalles.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${item.nombre}</strong></td>
+                        <td>${item.valor_ingresado}</td>
+                        <td>${item.punto_corte_midpoint}</td>
+                        <td><span class="badge badge-${item.valor_binario}">Bit: ${item.valor_binario}</span></td>
+                        <td>${item.interpretacion}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        } catch (error) {
+            alert('Error al conectar con la API local. Asegúrate de tener corriendo python api.py');
+        }
+    });
+</script>
+
+</body>
+</html>
